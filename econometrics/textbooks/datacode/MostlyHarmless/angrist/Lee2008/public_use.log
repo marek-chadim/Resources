@@ -1,0 +1,221 @@
+-----------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\chadi\OneDrive - Handelshögskolan i Stockho
+> lm\Econ\resources\econometrics\textbooks\datacode\MostlyHarmles
+> s\angrist\Lee2008\public_use.log
+  log type:  text
+ opened on:  23 Jun 2024, 04:51:31
+
+. program drop _all;
+
+. ***************************************************************
+> *********************************;
+. /*FIGURE ONE*/;
+. ***************************************************************
+> *********************************;
+. use figure1.dta, clear;
+
+. list;
+
+     +---------------------------------------+
+     | year       col1       col2       col3 |
+     |---------------------------------------|
+  1. | 1948   .7952941   .7990654   .0215054 |
+  2. | 1950   .9088785   .7640187   .0168067 |
+  3. | 1952          .   .8341122   .0250696 |
+  4. | 1954   .9018692   .8668224   .0250696 |
+  5. | 1956   .9462617   .7733645   .0464481 |
+     |---------------------------------------|
+  6. | 1958   .8693587   .8349057   .0172414 |
+  7. | 1960   .9009434   .7915691   .0134771 |
+  8. | 1962          .   .7672209   .0209424 |
+  9. | 1964   .8687351         .8   .0325815 |
+ 10. | 1966   .8548009   .8538283   .0103359 |
+     |---------------------------------------|
+ 11. | 1968   .9392523   .8167053   .0102564 |
+ 12. | 1970   .9086651   .7785548   .0103627 |
+ 13. | 1972          .   .7023256   .0382653 |
+ 14. | 1974   .8181818   .7985782   .0077121 |
+ 15. | 1976   .9336493   .7132867    .009901 |
+     |---------------------------------------|
+ 16. | 1978    .926396   .7531807   .0277778 |
+ 17. | 1980   .8920308   .7189873   .0080429 |
+ 18. | 1982          .   .8222749    .014742 |
+ 19. | 1984   .9170616   .8424821   .0179028 |
+ 20. | 1986   .9200969   .8726415    .005168 |
+     |---------------------------------------|
+ 21. | 1988   .9691212   .8160377   .0180412 |
+ 22. | 1990   .9180723   .6863208   .0052493 |
+ 23. | 1992          .   .7603686   .0260047 |
+ 24. | 1994   .8498845   .7934272      .0175 |
+ 25. | 1996   .9014084   .8317536   .0121065 |
+     |---------------------------------------|
+ 26. | 1998   .9506173          .          . |
+     +---------------------------------------+
+
+. twoway (connected col1 year, ms(s) mc(gs0) msize(medium) mfcolo
+> r(gs0) mlcolor(gs0) lpattern(solid) lcolor(gs0)) || 
+>                                 (connected col2 year, ms(sh) mc
+> (gs0) msize(medium) mfcolor(none) mlcolor(gs0) lpattern(dash) l
+> color(gs0)) || 
+>                                 (connected col3 year, ms(x) mc(
+> gs0) msize(medium) mfcolor(none) mlcolor(gs0) lpattern(dash) lc
+> olor(gs0)),
+>                                 title("Figure 1", color(gs0)) x
+> title("Year") ytitle("Proportion Winning Election") legend(labe
+> l(1 "Incumbent Party") label(2 
+>                                 "Winning Candidate") label(3 "R
+> unner-up Candidate")) yscale(r(0 1)) xscale(r(1948 1998)) ylabe
+> l(0(.1)1) 
+>                                 xlabel(1948(10)1998) saving("./
+> final/Fig1.gph", replace);
+(file ./final/Fig1.gph not found)
+file ./final/Fig1.gph could not be opened
+r(603);
+
+end of do-file
+
+r(603);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. use individ_final.dta, clear;
+option ; not allowed
+r(198);
+
+end of do-file
+
+r(198);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. use individ_final.dta, clear
+
+. 
+. graph twoway (scatter mmyoutcomenext difshare, ms(O) mc(gs0) ms
+> ize(small)) (line mpmyoutcomenext difshare, sort lcolor(gs0)) 
+
+.                                 if difshare>-0.251 & difshare<0
+> .251 & use==1, xline(0, lcolor(gs0)) title("Figure 2a", color(g
+> s0)) xtitle("Democratic Vote Share Margin of Victory, Election 
+> t") 
+options not allowed
+r(101);
+
+end of do-file
+
+r(101);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. graph twoway (scatter mofficeexp difshare, ms(O) mc(gs0) msize(
+> small)) (line mpofficeexp difshare, sort lcolor(gs0)) 
+
+.                                 if difshare>-0.251 & difshare<0
+> .251 & use==1, xline(0, lcolor(gs0))
+options not allowed
+r(101);
+
+end of do-file
+
+r(101);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. use group_final, clear;
+option ; not allowed
+r(198);
+
+end of do-file
+
+r(198);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. use group_final, clear
+
+. 
+. graph twoway (scatter mdemsharenext difdemshare, ms(O) mc(gs0) 
+> msize(small)) (line mpdemsharenext difdemshare, sort lcolor(gs0
+> )) if 
+invalid syntax
+r(198);
+
+end of do-file
+
+r(198);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. ***************************************************************
+> *********************************;
+. 
+. use table_one_final, clear;
+option ; not allowed
+r(198);
+
+end of do-file
+
+r(198);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. use table_one_final, clear
+
+. 
+. outsheet Variable Col_1 Col_2 Col_3 Col_4 Col_5 Col_6 Col_7 Col
+> _8
+using required
+r(100);
+
+end of do-file
+
+r(100);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. use table_one_final, clear
+
+. 
+. outsheet Variable Col_1 Col_2 Col_3 Col_4 Col_5 Col_6 Col_7 Col
+> _8 //
+using required
+r(100);
+
+end of do-file
+
+r(100);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. 
+. outsheet Variable Col_1 Col_2 Col_3 Col_4 Col_5 Col_6 Col_7 Col
+> _8 ////
+>          using "./final/table1.csv", comma replace;
+option ; not allowed
+r(198);
+
+end of do-file
+
+r(198);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD4a58_000000.tmp"
+
+. outsheet Variable Col_1 Col_2 Col_3 Col_4 Col_5 Col_6 Col_7 Col
+> _8 ////
+>          using "./final/table1.csv", comma replace
+(file ./final/table1.csv not found)
+file ./final/table1.csv could not be opened
+r(603);
+
+end of do-file
+
+r(603);
+
+. exit, clear

@@ -1,0 +1,7 @@
+v 1.0
+
+d moulton: Moulton correction for OLS standard errors
+d Written by Steve Pischke
+
+f moulton.ado
+f moulton.hlp

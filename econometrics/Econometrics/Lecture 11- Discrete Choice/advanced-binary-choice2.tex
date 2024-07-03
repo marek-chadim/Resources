@@ -1,0 +1,468 @@
+\documentclass[xcolor=pdftex,dvipsnames,table,mathserif,aspectratio=169]{beamer}
+\usetheme{default}
+\usetheme{metropolis}
+\usepackage{minted}
+\usepackage{mathtools}
+\setbeamersize{text margin left=.3in,text margin right=.3in} 
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}%
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}%
+
+\usepackage[english]{babel}
+\usepackage{pgf,pgfarrows,pgfnodes,pgfautomata,pgfheaps}
+\usepackage{amsmath,amssymb,setspace,centernot}
+\usepackage[latin1]{inputenc}
+\usepackage{pgf,tikz}
+\usepackage[T1]{fontenc}
+\usepackage{relsize}
+\usepackage{pdfpages}
+\usepackage[absolute,overlay]{textpos} 
+
+
+\newenvironment{reference}[2]{% 
+  \begin{textblock*}{\textwidth}(#1,#2) 
+      \footnotesize\it\bgroup\color{red!50!black}}{\egroup\end{textblock*}} 
+
+\DeclareMathSizes{10}{10}{6}{6} 
+
+\begin{document}
+\title{Advanced Binary Choice: Endogeneity}
+\author{Chris Conlon}
+\institute{Applied Econometrics}
+\date{\today}
+
+\frame{\titlepage}
+
+\begin{frame}{Readings}
+\begin{itemize}
+\item CF Methods: Blundell Powell (2004)
+\item SR Methods: Lewbel (2002) Lewbel, Dong and Tang (2014)
+\item  SR Methods: Baum, Dong, Lewbel, Yang (2012)
+ \end{itemize}
+\end{frame}
+
+\section{Endogeneity}
+
+\begin{frame}
+\frametitle{Problem \#2: Endogeneity}
+Four possible solutions (maybe there are more?)
+\begin{enumerate}
+\item Close eyes, run the LPM with instruments (Suggested by MHE).
+\item Specify the distribution of errors in first and second stage and do MLE (\texttt{biprobit} in STATA).
+\item Control Function Estimation
+\item `Special Regressor' Methods
+\end{enumerate}
+\end{frame}
+
+
+
+
+
+\begin{frame}
+\frametitle{Problem \#1: Endogeneity}
+Setup:
+\begin{itemize}
+\item Binary variable $D$: the outcome of interest
+\item $X$ is a vector of observed regressors with coefficient $\beta$ 
+\begin{itemize}
+\item (Can think about $X^e$: endogenous and $X^0$: exogenous).
+\item In an treatment model we might have that $T$ is a binary treatment indicator within $X$
+\end{itemize}
+\item $\epsilon$ is unobserved error. Specifying $f(e)$ can give logit/probit.
+\item Threshold Crossing / Latent Variable Model:
+\begin{eqnarray*}
+D = \mathbf{1}(X \beta + \epsilon \geq 0)
+\end{eqnarray*}
+\item Goal is not usually $\hat{\beta}$ or it's CI, but rather $P(D=1 | X)$ or $\frac{\partial P[D=1 | x] }{\partial X}$ (marginal effects).
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}\frametitle{Solution \#0 : LPM}
+\footnotesize
+\begin{block}{Advantages}
+\begin{itemize}
+\item Just like 2SLS.
+\item Computationally easy (no numerical searches)
+\item Missing $Z$ is about efficiency not consistency.
+\item $X^e$ can be discrete or continuous (same estimator)
+\item allows general heteroskedasticity (random coefficients)
+\end{itemize}
+\end{block}
+\begin{block}{Disadvantages}
+\begin{itemize}
+\item $\hat{F}_D$ is linear not S-shaped, approximation valid for small range of $X$.
+\item $\hat{F}_D$ can be outside $[0,1]$.
+\item no element of $X$ can have $\infty$ support (e.g. no normally distributed regressors).
+\item $\varepsilon$ not independent of any regressors  (even the exogenous ones). How do we also get $E[X^0 \varepsilon] =0$ ?
+\item Does not nest probit, logit, etc.. Can't compare efficiency
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Solution \#1 : MLE}
+\begin{eqnarray*}
+D = I ( X' \beta + \varepsilon \geq 0 ) \quad \mbox{and} \quad X^e = G(Z,\theta,e)
+\end{eqnarray*}
+\begin{itemize}
+\item Fully specified $G$ (could be vector). Could be linear if $X^e$ continuous or probit if $X^e$ binary.
+\item Need to fully specify distribution of $(\varepsilon,e, | Z)$, parametrized.
+\item Implementation (see Cameron Trivedi or Greene), \texttt{biprobit} for joint normal in Stata.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Solution \#1 : MLE}
+
+\begin{block}{Advantages}
+\begin{itemize}
+\item Nests logit, probit, etc. as special cases.
+\item Can have any kind of $X^e$
+\item Allows heteroskedasticity, random coefficients
+\item Asymptotically efficient (if correctly specified)
+\end{itemize}
+\end{block}
+
+\begin{block}{Disadvantages}
+\begin{itemize}
+\item Need to parametrize everything $G$, $F_{\varepsilon,e|Z}$.
+\item Numerical optimization issues
+\item Many nusiance parameters, sometimes poorly identified, especially with discrete $X^e$, correlation between latent $(\varepsilon,e)$.
+\item Need to know all required instruments $Z$. Omitting just one $Z$ causes inconsistency in $G$. (Not sure if something is exogenous, too bad!).
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Solution \#2 : Control Functions}
+\begin{eqnarray*}
+D &=& I ( X' \beta + \varepsilon \geq 0 ) \quad \mbox{and} \\
+ X^e &=& G(Z) +e  \quad \mbox{or}  \quad  X^e = G(Z,e) \quad \mbox{ identified and invertible in $e$}\\
+  \varepsilon  &=&\lambda' e + U \quad \mbox{or}  \quad  \varepsilon = H(U,e) \quad \mbox{ with conditions and } U \bot Z,e.
+\end{eqnarray*}
+Simple Case:
+\begin{itemize}
+\item Estimate a vector of functions $G$ in the $X^e$ models, get estimated errors $\hat{e}$.
+\item Estimate the $D$ model including $\hat{e}$ as additional regressors in addition to $X$.
+\item This ``cleans'' the errors in $U$.
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Solution \#2 : Control Functions (\texttt{ivprobit} in Stata, maybe R?)}
+\small
+\begin{itemize}
+\item \texttt{ivprobit} assumes that $G(Z,e)$ is linear, and $(e,\varepsilon)$ jointly normal, independent of $Z$.
+\item not exactly the semi-parametric flexibility we were looking for...
+\item It is actually Control Function not IV
+\end{itemize}
+\begin{align*}
+D &= I ( X^e  \beta_e + X^0 \beta_0+ \varepsilon \geq 0 ) \\
+ X^e &= \gamma Z + e  
+\end{align*}
+Run first-stage OLS and get residuals $\hat{e}$. Then plug into and do a conventional probit estimator.
+\begin{align*}
+D &= I ( X^e  \beta_e + X^0 \beta_0+ + \lambda \hat{e} + U  \geq 0 )
+\end{align*}
+\vspace{-.2cm}
+\begin{itemize}
+\item If you forget a $Z_2$ the resulting model isn't even probit!
+\item God help you if $X^e$ isnt continuous.
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Solution \#2 : Control Functions}
+\begin{eqnarray*}
+D &=& I ( X' \beta + \varepsilon \geq 0 ) , \quad X^e = G(Z,e) ,  \varepsilon = H(U,e),  \quad U \bot X,e.
+\end{eqnarray*}
+Much stronger requirements that 2SLS
+\begin{itemize}
+\item Must be able to solve for errors $e$ in $X^e$ equations (not just orthogonality)
+\item Endogeneity must be caused only by $\varepsilon$ relation to $e$ so after conditioning on $e$ must be that $f(\varepsilon | e, X^{e}) = f( \varepsilon | e)$.
+\item I need a consistent estimator for $e$ which means nothing is omitted.
+\end{itemize}
+Not Quite MLE
+\begin{itemize}
+\item First stage can be semi/non-parametric .
+\item Don't need to fully specify joint distribution of $(\varepsilon,e)$ (Stata does though!).
+\end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Solution \#2 : Control Functions}
+\begin{block}{Advantages}
+\begin{itemize}
+\item Nests logit, probit, etc. as special cases
+\item Requires less parametric information than MLE
+\item Some versions are computationally easy without numerical optimization (Bootstrap!)
+\item Less efficient than MLE due to less restrictions,but can be semiparametrically efficient given information.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Solution \#2 : Control Functions (Disadvantages: Not well known)}
+\begin{itemize}
+\item Only allows limited heteroskedasticity
+\item Need to correctly specify vector $G(Z,e)$ including all $Z$. Omitting a $Z$ or misspecified $G$ causes inconsistency because we need to have joint conditions on $(\varepsilon , e)$.
+\item Generally inconsistent for $X^e$ that is discrete, censored, limited, or not continuous.
+\item If you cannot solve for a latent $e$ in $G(Z,e)$ then you can't get $\hat{e}$ for the censored observations (e.g.: $X^e = \max(0, Z'\gamma + e)$.
+\item An observable $e$ is $e = X^e - E[X^e | Z]$ but for discontinuous $X^e$ that $e$ violates assumptions (except in very strange cases)
+\begin{itemize}
+\item Ex: $\varepsilon =  [ X^e - E[X^e | Z]] \lambda + U$ satisfies CF, but if $X^e$ is discrete then $e$ has some strange distribution that depends on regressors. 
+\item Hard to generate a model of behavior that justifies this!
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Solution \#2 : Control Functions Generalized Residuals}
+What if $X^e$ isn't continuous? Technically possible...
+\begin{itemize}
+\item Given the probit estimate in first stage we could construct a generalized residual (see Imbens and Wooldridge notes) 
+\item $e^g \propto E[\varepsilon | Z, e]$. An estimate $\hat{e}^g$ of $e^g$ can be included as a regressor in the model to fix the endogeneity problem, just as $\hat{e}$ would have been used if the endogenous regressor were continuous.
+\end{itemize}
+Why would you ever want to do this..
+\begin{itemize}
+\item In the linear model we should just do IV with far fewer restrictions
+\item In the nonlinear model, $\hat{e}^g$ requires almost as many assumptions as MLE which is efficient!
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Solution \#3 : Special Regressor}
+This approach draws on these two papers:
+\begin{itemize}
+\item Lewbel (JoE 2002)
+\item Dong and Lewbel (Econometric Reviews 2015)
+\end{itemize}
+\begin{eqnarray*}
+D &=& I ( X' \beta + V + \varepsilon \geq 0 )
+\end{eqnarray*}
+Special Regressor $V$ has three properties
+\begin{itemize}
+\item Exogenous $E[\varepsilon | V ] =0$
+\item Additively separable in the model
+\item Continuous distribution and large support (such as Normal)
+\item Helpful to have thick-tails (kurtosis). Why? We want to trace $Pr(D | V)$ from $[0,1]$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Learn about SR}
+\small
+Binary, ordered, and multinomial choice, censored regression, selection, and treatment models (Lewbel 1998, 2000, 2007a), truncated regression models (Khan and Lewbel 2007), binary panel models with FE (Honore and Lewbel 2002), dynamic choice models (Heckman and Navarro 2007, Abbring and Heckman 2007), contingent valuation models (Lewbel, Linton, and McFadden 2008), market equilibrium models of multinomial choice (Berry and Haile 2009a, 2009b), models with (partly) nonseparable errors (Lewbel 2007b, Matzkin 2007, Briesch, Chintagunta, and Matzkin 2009).\\
+Other empirical applications: Anton, Fernandez Sainz, and Rodriguez-Poo (2002), Cogneau and Maurin (2002), Goux and Maurin (2005), Stewart (2005), Lewbel and Schennach (2007), and Tiwari, Mohnen, Palm, and van der Loeff (2007).\\
+Precursors: Matzkin (1992, 1994) and Lewbel (1997).\\
+Recent theory: Magnac and Maurin (2007, 2008), Jacho-Ch·vez (2009), Khan and Tamer (2010), and Khan and Nekipelov (2010a, 2010b).
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Solution \#3 : Special Regressor}
+Requirements:
+\begin{eqnarray*}
+D &=& I ( X' \beta + V + \varepsilon \geq 0 )
+\end{eqnarray*}
+\begin{itemize}
+\item Exogenous $E[\varepsilon | V ] =0$ (Strict Exogeneity) \alert{This is the key!} 
+\item Additively separable in the model
+\item Continuous distribution and large support (such as Normal)
+\item NOT interacted with other regressors.
+\item enters LINEARLY, e.g. $V$ must be continuously distributed after conditioning on other regressors
+\item Can normalize its coefficient to $1$
+\item 2SLS Assumptions: $E[ \varepsilon | Z] = 0$ and $E[Z'X]$ is full rank.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Solution \#3 : Special Regressor: How it works}
+\begin{enumerate}
+\item Demean or center $V$ at zero. 
+\item Assume that $f_v ( V | Z,X^e) = f_v(V | Z)$ and let $\hat{f}_v ( V | Z) $ be a nonparametric kernel estimator of $f_v(V | Z)$. Or just use a kernel of the whole thing $\hat{f}_v ( V | Z,X^e)$
+\item For each observation $i$, Construct $\hat{T}_i = I [D_i -  I(V_i \geq 0)]/ \hat{f_v} (V_i | Z_i)$
+\item Linear 2SLS regression of $\hat{T}$ on $X$ using instruments $Z$ to get the estimated coefficients $\hat{\beta}$.
+\end{enumerate}
+Here $\hat{f}_v(V|Z)$ is high dimensional. So will consider some simpler parametric or semi-parametric version of $f_v$.\\
+By properly adjusting $T_i$ we guarantee to stay in $[0,1]$.
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Solution \#3 : Special Regressor Advantages}
+\begin{itemize}
+\item Unlike LPM it stays ``in bounds'' and is consistent with threshold crossing models.
+\item Unlike MLE and CF, does not require correctly specified first stage model: any valid set of instruments may be used, with only efficiency at stake.
+\item Unlike MLE, the SR method has a linear form, not requiring iterative search
+\item Unlike CF, the SR method can be used when endogenous regressors $X^e$ are discrete or limited; unlike ML there is a single estimation method, regardless of the characteristics of $X^e$
+\item Unlike MLE, the SR method permits unknown heteroskedasticity in the model errors.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Solution \#3 : Special Regressor Disadvantages}
+\begin{eqnarray*}
+D &=& I ( X' \beta + V + \varepsilon \geq 0 )
+\end{eqnarray*}
+\begin{itemize}
+\item Because assumptions are weaker we give up a lot of potential efficiency (larger SEs).
+\item Of course this presumes the assumptions were valid and alternatives were consistent.
+\item SR Methods are generally valid under more general conditions.
+\end{itemize}
+\end{frame}
+
+\section*{Now What?}
+
+\begin{frame}
+\frametitle{ The average index function (AIF)/ Propensity Score}
+In the original problem
+\begin{eqnarray*}
+D &=& I ( X' \beta + \varepsilon \geq 0 )
+\end{eqnarray*}
+\begin{itemize}
+\item $V$ is part of $X$ with coefficient $=1$
+\item When $\varepsilon \bot x$ write the propensity score: $E[D | X] = E[D | X \beta] = F_{-\varepsilon} (X \beta)  = Pr(- \varepsilon \leq X \beta)$. 
+\item Under independence $X \bot \varepsilon$ these are the same, under endogeneity or even heteroskedasticity they are not.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{ The average index function (AIF)/ Propensity Score}
+\begin{itemize}
+\item Blundell and Powell (ReStud 2004, this is actually the most important control function paper) use the average structural function (ASF) $= F_{-\varepsilon} (X \beta) $ to summarize choice probabilities. But when $\varepsilon \bot X$ is violated then they have to compute $F_{-\varepsilon | X} (X \beta) $ which is quite difficult (especially semiparametrically).
+\item Lewbel, Dong and Tang (CJE 2012) propose using the AIF estimator $E[D | X \beta]$ instead.
+\item Like ASF the AIF is based on the estimated index $X \beta$ and is equal to the propensity score if $\varepsilon \bot X$. However, when this is violated (endogeneity, heteroskedasticity) the AIF is easier to estimate, via unidimensional nonparametric regression of $D$ on $X \beta$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{ What is the difference}
+\begin{description}
+\item[Propensity Score: ]  Conditions on ALL covariates using $F_{-\varepsilon | X}$.
+\item[ASF: ]  Conditions on no covariates using $F_{-\varepsilon }$.
+\item[AIF: ]  Conditions on index only  using $F_{-\varepsilon | X \beta}$.
+\end{description} 
+
+\begin{itemize}
+\item Unlike ASF, AIF is always identified and easy to estimate.
+\item Unlike Propensity score AIF uses $\beta$ and isn't high dimensional
+\item ASF, AIF and propensity score all coincide under exogeneity.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{ Marginal Effects}
+\begin{itemize}
+\item With exogenous $X$: MFX are $m(X) = p'(X) =  \frac{\partial E[D | X \beta]}{\partial X}$.
+\item Let $f_{-\varepsilon}$ be marginal pdf of $-\varepsilon$. If $D=I(X' \beta + \varepsilon \geq 0)$ with $\varepsilon \bot X$ then:
+\end{itemize}
+\begin{eqnarray*}
+m (X \beta) \beta= \frac{\partial E[D | X]}{\partial X}  = \frac{\partial E[D | X \beta]}{\partial X' \beta}  \beta  = f_{-\varepsilon}(X' \beta) \beta
+\end{eqnarray*}
+
+With endogenous $X$:
+\begin{itemize}
+\item Propensity Score marginal effects are $m(X) = p'(X) =  \frac{\partial E[D | X]}{\partial X}$.
+\item ASF marginal effects are $m(X) =\frac{\partial ASF(X'\beta)}{\partial X'\beta} \beta = f_{-\varepsilon}(X' \beta) \beta.$
+\item AIF marginal effects are $m(X) =\frac{\partial ASF(X'\beta)}{\partial X'\beta} \beta = \frac{\partial E[D | X' \beta ]}{\partial X' \beta} \beta$
+\end{itemize}
+Given $\hat{\beta}$ ASF and AIF mfx require just one dimensional index derivative.
+\end{frame}
+
+\begin{frame}
+\frametitle{Binary Choice with Endogenous Regressors}
+\begin{itemize}
+\item Linear probability models, Maximum Likelihood, and Control functions (including \texttt{ivprobit} have more drawbacks and limitations than are usually recognized.
+\item Special Regressor estimators are a viable alternative (or at least they have completely different drawbacks and may be more generally applicable than has been recognized).
+\item In practice, best might be to try all estimators and check robustness of results. Can use marginal effects to normalize them the same when comparing.
+\item Average Index Functions can be used to construct estimated probabilities and comparable marginal effects across estimators, often simpler to calculate than Average Structural Functions.
+\item Implementation of special regressor in Stata is done in \texttt{sspecialreg}.
+\end{itemize}
+\end{frame}
+
+\section*{Empirical Example}
+\begin{frame}
+\frametitle{Empirical Example: Dong and Lewbel (2015)}
+\begin{itemize}
+\item Binary dependent variable: does $i$ migrate from one state to another. 
+\item Special Regressor $V_i$: age. Human capital theory suggests it should appear linearly (or at least monotonic) in a threshold crossing model 
+\item Migration is drive by maximizing expected lifetime income and potential gain from a permanent change in income declines linearly in age.
+\item $V_i$ is defined as negative of age, demeaned so that coefficient is positive with mean zero.
+\item Other endogenous regressors: family income pre migration, home ownership.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Empirical Example: Dong and Lewbel (2015)}
+As a reminder, normally we would be in trouble here:
+\begin{itemize}
+\item MLE would be very complicated with multiple endogenous variables
+\item Control functions \texttt{ivprobit} won't work with 0/1 homeowner variable.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Empirical Example: Dong and Lewbel (2015)}
+1990 PSID
+\begin{itemize}
+\item male head of household (23-59 years), completed education and not-retired (key!)
+\item $D=1$ indicates migration during 1991-1993.
+\item 4689 Individuals, 807 migrants.
+\item Exogenous regressors: years of education, \# of children, white, disabled, married.
+\item Instruments: level of govt benefits in 1989-1990, state median residential tax rate.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Empirical Example: Dong and Lewbel (2015)}
+Specifications
+\begin{itemize}
+\item Special Regressors: kernel density vs. sorted data density.
+\item Special Regressor: homoskedastic vs. heteroskedastic errors.
+\item LPM vs 2SLS
+\item Probit (assuming exogeneity)
+\item Control Function (\texttt{ivprobit}) misspecified for \texttt{homeowner} endogenous binary variable.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Empirical Example}
+\begin{center}
+\includegraphics[width=4in]{resources/specialregtable.png}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Empirical Example: Dong and Lewbel (2015)}
+
+\begin{itemize}
+\item SEs of MFX are computed from 100 bootstrap replications
+\item MFX of special regressor (age) is estimated as positive and significant but LPM and ivprobit estimate negative effects!
+\item household income and home ownership status do not seem to play significant roles in migration decision.
+\item Kernel density estimator seems to give most significant results.
+\end{itemize}
+\end{frame}
+
+
+\section*{Thanks!}
+
+\end{document}

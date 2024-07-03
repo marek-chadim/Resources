@@ -1,0 +1,68 @@
+{smcl}
+{hline}
+help for {hi:moulton}
+{hline}
+
+{title:Moulton correction for OLS standard errors}
+{p 8 21 2}{cmdab:moulton}
+{depvar}
+{indepvars}
+{ifin}
+{cmd:,}
+    {cmdab:cl:uster}{cmd:(}{it:string}{cmd:)}
+    [
+    {cmd:noIC}
+    {cmd:moulton}
+    {cmd:force}
+    ]
+
+
+{title:Description}
+{pstd}
+{cmd:Moulton} implements an OLS standard error correction for clustering. Moulton (1986) factors are estimated from the data and used to scale the conventional OLS standard errors.
+{p_end}{pstd}
+The error term is assumed to have a cluster specific and an observation specific component:
+{p_end}{pstd}
+e_ig = v_g + u_ig
+{p_end}{pstd}
+Where both components are homoscedastic. The Moulton factor (Angrist and Pischke, 2009) is given by:
+
+{pstd}
+MF^2 = 1 + [V(n_g)/SUM_g n_g + SUM_g n_g - 1]
+{p_end}{p 11 11 2}*[{SUM_g SUM_i!=k (x_ig - SUM_ig x_ig)*(x_kg - SUM_ig x_ig)}/{V(x_ig)*SUM_g n_g(n_g -1)}]
+{p_end}{p 11 11 2}*[V(v)/{V(v)+V(u)}]
+
+{pstd}The term in the first brackets scales the Moulton factor accounting for different cluster sizes. 
+The term in the second brackets is the intra-class correlation of the regressors (which is 1 if the regressors are fixed within cluster) and the final term is the intra-class correlation of the residuals.
+
+{p2colset 5 23 28 0}{p2col:{inp:n_g}} number of observations in cluster/class g
+{p_end}{p2col:{inp:x_ig}} regressor x for observation i in cluster g
+{p_end}{p2col:{inp:V(X)}} variance of X
+{p_end}{p2col:{inp:SUM_X}} sum over the range of X
+
+
+{title: Options}
+{p2col:{cmdab:cl:uster}{cmd:(}{it:string}{cmd:)}} a variable indicating clusters.
+{p_end}{p2col: {cmd:noIC}} surpresses reporting of intra-class correlations.
+{p_end}{p2col: {cmd:moulton}} use Moulton (1986)'s formula for intra-class correlations instead of Stata's loneway command (default).
+{p_end}{p2col: {cmd:force}} forces the intra-class correlation of the regressors to 1 (appropriate when regressors do not vary at the cluster level).
+
+
+{title: Examples}
+{inp: . use http://www.ats.ucla.edu/stat/stata/seminars/svy_stata_intro/srs, clear}
+{inp: . regress api00 growth emer yr_rnd, robust}
+{inp: . moulton api00 growth emer yr_rnd, cl(dnum)}
+{inp: . moulton api00 growth emer yr_rnd, cl(dnum) moulton}
+
+
+{title: Background Reading}
+{p 2 4}Angrist J. and Pischke, J.-S. (2009), "Mostly Harmless Econometrics".
+
+{p 2 4}Moulton B.R. (1986), "Random Group Effects and the Precision of Regression Estimates", {it:Journal of Econometrics 32}, 385-397.
+{p_end}
+
+
+{title:Author}
+{pstd}
+Steve Pischke, London School of Economics and Political Science and NBER. 
+{p_end}{pstd}If you encounter any problems {browse "mailto:jsp@nber.com"}

@@ -1,0 +1,110 @@
+
+. 
+. set more off
+
+. 
+. set mem 100m
+set memory ignored.
+    Memory no longer needs to be set in modern Statas; memory
+    adjustments are performed on the fly automatically.
+
+. 
+. clear
+
+. 
+. local data "nswre74 cps1re74 cps3re74 "
+
+. local datashort "cps1re74 cps3re74"
+
+. 
+. local spec1 ""
+
+. local spec2 "age age2 ed black hisp nodeg"
+
+. local spec3 "re75"
+
+. local spec4 "re75 age age2 ed black hisp nodeg"
+
+. local spec5 "re74 re75 age age2 ed black hisp nodeg"
+
+. local spec2a "age age2 ed black hisp nodeg married"
+
+. local spec4a "re75 age age2 ed black hisp nodeg married"
+
+. local spec5a "re74 re75 age age2 ed black hisp nodeg married"
+
+. 
+. local line1 "Raw Difference"
+
+. local line2 "D+W Demographics"
+
+. local line3 "and Marriage Dummy"
+
+. local line4 "75 Earnings"
+
+. local line5 "D+W Demographics 75 Earnings"
+
+. local line6 "and Marriage Dummy"
+
+. local line7 "D+W Demographics 74,75 Earnings"
+
+. local line8 "and Marriage Dummy"
+
+. local lastl "Dropped in pscore regs: "
+
+. local nswre74 "NSW"
+
+. local cps1re74 "CPS-1"
+
+. local cps3re74 "CPS-3"
+
+. local nearlylastl "Sample sizes in pscore regs (treated/untreat
+> ed): "
+
+. 
+. foreach set in `data' {
+  2.     local lctr = 0
+  3.     u `path'/`set', clear
+  4.     forvalues t = 1/5 {
+  5.         local ++lctr
+  6.         reg re78 treat `spec`t''
+  7.             local b = _b[treat]
+  8.             local se = _se[treat]
+  9.             local b = round(`b',1)
+ 10.             local se = round(`se',1)
+ 11.             local line`lctr' "`line`lctr''&    `b' &   (`se'
+> )  "
+ 12.         if `t' == 2 | `t' == 4 | `t' == 5 {
+ 13.             local ++lctr
+ 14.             reg re78 treat `spec`t'a'
+ 15.             local b = _b[treat]
+ 16.             local se = _se[treat]
+ 17.             local b = round(`b',1)
+ 18.             local se = round(`se',1)
+ 19.             local line`lctr' "`line`lctr''&    `b' &   (`se'
+> )  "
+ 20.         }
+ 21.     }
+ 22. }
+file /nswre74.dta not found
+r(601);
+
+end of do-file
+
+r(601);
+
+. do "C:\Users\chadi\AppData\Local\Temp\STD732c_000000.tmp"
+
+. ***********************************
+. *Dehejia and Wahba (1999) - Causal Effects in Nonexperimental S
+> tudies:
+. *                           Reevaluating the Evaluation of Trai
+> ning Programs
+. ***********************************
+. 
+. local path "C:\Users\chadi\OneDrive - Handelshögskolan i Stockh
+> olm\Econ\resources\econometrics\textbooks\datacode\MostlyHarmle
+> ss\angrist"
+
+. 
+. cap log close

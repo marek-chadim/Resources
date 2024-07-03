@@ -1,0 +1,318 @@
+-----------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\chadi\OneDrive - Handelshögskolan i Stockho
+> lm\Econ\resources\econometrics\textbooks\datacode\MostlyHarmles
+> s\angrist\krueger.log
+  log type:  text
+ opened on:  23 Jun 2024, 04:44:57
+
+. 
+. /* create Krueger scaled scores */
+. 
+. /* reading score */
+. 
+. clear
+
+. use webstar
+
+. 
+. keep if cltypek > 1                     /* regular classes */
+(1,900 observations deleted)
+
+. keep if treadssk ~= .
+(5,648 observations deleted)
+
+. 
+. sort treadssk
+
+. gen pread0 = 100*_n/_N
+
+. 
+. egen pread = mean(pread0), by(treadssk) /* percentile score in 
+> reg. classes */
+
+. 
+. keep treadssk pread
+
+. sort tread
+
+. keep if tread ~= tread[_n-1]
+(3,958 observations deleted)
+
+. save tempr, replace
+(file tempr.dta not found)
+file tempr.dta saved
+
+. 
+. /* math score */
+. 
+. use webstar
+
+. 
+. keep if cltypek > 1                     /* regular classes */
+(1,900 observations deleted)
+
+. keep if tmathssk ~= .
+(5,589 observations deleted)
+
+. 
+. sort tmathssk
+
+. gen pmath0 = 100*_n/_N
+
+. egen pmath = mean(pmath0), by(tmathssk)
+
+. 
+. keep tmathssk pmath
+
+. sort tmath
+
+. keep if tmath ~= tmath[_n-1]
+(4,072 observations deleted)
+
+. save tempm, replace
+(file tempm.dta not found)
+file tempm.dta saved
+
+. 
+. /* merge percentile scores back on */
+. 
+. use webstar
+
+. 
+. keep if stark == 1
+(5,273 observations deleted)
+
+. 
+. sort treadssk
+
+. merge treadssk using tempr
+variable treadssk does not uniquely identify observations in
+    the master data
+
+. ipolate pread treadssk, gen(pr) epolate
+(536 missing values generated)
+
+. drop _merge
+
+. 
+. sort tmathssk
+
+. merge tmathssk using tempm
+variable tmathssk does not uniquely identify observations in
+    the master data
+
+. ipolate pmath tmathssk, gen(pm) epolate
+(454 missing values generated)
+
+. replace pm = 0 if pm < 0
+(1 real change made)
+
+. drop _merge
+
+. 
+. egen pscore = rowmean(pr pm)
+(451 missing values generated)
+
+. 
+. /* make class ids */
+. 
+. egen classid1 = group(schidkn cltypek)
+
+. egen cs1 = count(classid1), by(classid1)
+
+. 
+. egen classid2 = group(classid1 totexpk hdegk cladk) if cltypek=
+> =1 & cs >= 20
+(5,100 missing values generated)
+
+. egen classid3 = group(classid1 totexpk hdegk cladk) if cltypek>
+> 1 & cs >= 30
+(4,708 missing values generated)
+
+. 
+. gen temp = classid1*100
+
+. egen classid = rowtotal(temp classid2 classid3)
+
+. egen cs = count(classid), by(classid)
+
+. 
+. gen female = ssex == 2
+
+. gen nwhite = srace >= 2 & srace <= 6 if srace ~= .
+(3 missing values generated)
+
+. 
+. keep if cs <= 27 & pscore ~= .
+(582 observations deleted)
+
+. keep pscore cs schidkn classid female nwhite
+
+. gen n = 1
+
+. 
+. save temp, replace
+(file temp.dta not found)
+file temp.dta saved
+
+. 
+. reg pscore cs, robust
+
+Linear regression                               Number of obs    
+>  =      5,743
+                                                F(1, 5741)       
+>  =      47.18
+                                                Prob > F         
+>  =     0.0000
+                                                R-squared        
+>  =     0.0082
+                                                Root MSE         
+>  =     26.951
+
+-----------------------------------------------------------------
+> -------------
+             |               Robust
+      pscore | Coefficient  std. err.      t    P>|t|     [95% co
+> n                                                              
+>  f. interval]
+-------------+---------------------------------------------------
+> -------------
+          cs |   -.617992     .08997    -6.87   0.000    -.794367
+> 2                                                              
+>     -.4416168
+       _cons |   64.06662   1.861063    34.42   0.000     60.4182
+> 3                                                              
+>        67.715
+-----------------------------------------------------------------
+> -------------
+
+. local se = _se[cs]
+
+. local t = _b[cs]/`se'
+
+. predict r, res
+
+. loneway r classid
+
+                 One-way analysis of variance for r: Residuals
+
+                                             Number of obs =     
+>    5,743
+                                                 R-squared =     
+>   0.3484
+
+    Source                SS         df      MS            F     
+> Prob > F
+-----------------------------------------------------------------
+> --------
+Between classid        1453074.8    317    4583.8322      9.15   
+>   0.0000
+Within classid         2717044.3  5,425    500.83766
+-----------------------------------------------------------------
+> --------
+Total                  4170119.1  5,742    726.24854
+
+         Intraclass       Asy.        
+         correlation      S.E.       [95% conf. interval]
+         ------------------------------------------------
+            0.31105     0.02001       0.27183     0.35027
+
+         Estimated SD of classid effect          15.03718
+         Estimated SD within classid              22.3794
+         Est. reliability of a classid mean       0.89074
+              (evaluated at n=18.06)
+
+. local rho = r(rho)
+
+. 
+. collapse cs, by(classid)
+
+. sum cs
+
+    Variable |        Obs        Mean    Std. dev.       Min     
+>    Max
+-------------+---------------------------------------------------
+> ------
+          cs |        318    19.42453    4.138642         12     
+>     27
+
+. 
+. dis r(Var)
+17.128355
+
+. local m = 1 + (r(Var)/r(mean) + r(mean) - 1)*`rho'
+
+. dis `m'
+7.0051688
+
+. dis sqrt(`m')
+2.6467279
+
+. dis `se'
+.08997004
+
+. dis sqrt(`m')*`se'
+.23812623
+
+. dis `t'/sqrt(`m')
+-2.5952286
+
+. 
+. 
+. use temp, clear
+
+. 
+. reg pscore cs, robust
+
+Linear regression                               Number of obs    
+>  =      5,743
+                                                F(1, 5741)       
+>  =      47.18
+                                                Prob > F         
+>  =     0.0000
+                                                R-squared        
+>  =     0.0082
+                                                Root MSE         
+>  =     26.951
+
+-----------------------------------------------------------------
+> -------------
+             |               Robust
+      pscore | Coefficient  std. err.      t    P>|t|     [95% co
+> n                                                              
+>  f. interval]
+-------------+---------------------------------------------------
+> -------------
+          cs |   -.617992     .08997    -6.87   0.000    -.794367
+> 2                                                              
+>     -.4416168
+       _cons |   64.06662   1.861063    34.42   0.000     60.4182
+> 3                                                              
+>        67.715
+-----------------------------------------------------------------
+> -------------
+
+. moulton pscore cs, cluster(classid) moulton
+command moulton is unrecognized
+r(199);
+
+end of do-file
+
+r(199);
+
+. ssc install moulton
+ssc install: "moulton" not found at SSC, type search moulton
+(To find all packages at SSC that start with m, type ssc describe
+>  m)
+r(601);
+
+. do "C:\Users\chadi\OneDrive - Handelshögskolan i Stockholm\Econ
+> \resources\econometrics\textbooks\datacode\MostlyHarmless\angri
+> st\graderep.do"
+
+. version 8
+
+. set more 1
+
+. capture log close

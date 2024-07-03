@@ -1,0 +1,7 @@
+v 1.0
+d Programs accompanying the book Mostly Harmless Econometrics by Josh Angrist and Steve Pischke
+d moulton: Moulton correction for OLS standard errors
+d brl: Bias-reduced linarization (BRL) of standard errors.
+d Implemented for OLS and logistic regression.
+p moulton Moulton correction for OLS standard errors
+p brl Bias-reduced linarization (BRL) of standard errors.
